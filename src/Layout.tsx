@@ -8,7 +8,7 @@ export const Layout = () => {
     const route = useLocation();
     const navigate = useNavigate();
     useEffect(() => {
-        if (route.key === 'default') {
+        if (route.pathname == '/') {
             navigate('/juanetoh');
         }
     }, [route, navigate]);
