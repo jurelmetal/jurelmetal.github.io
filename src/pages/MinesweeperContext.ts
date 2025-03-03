@@ -68,12 +68,16 @@ const countNeighbors = (grid: CellInfo[][], row: number, col: number): number =>
 
 const generateInitialCellGrid = (rows: number, cols: number, mines: number): CellInfo[][] => {
     let grid: CellInfo[][] = copyValue(copyValue({state: 'closed', contents: { type: 'free', neighbors: 0}}, cols), rows);
-    makeRange(mines).forEach(() => {
+    let minesPlanted = 0;
+    while ( minesPlanted < mines) {
         // Place a mine in a random cell
         const mineRow = Math.floor(Math.random() * rows);
         const mineCol = Math.floor(Math.random() * cols);
-        grid[mineRow][mineCol].contents = { type: 'mine' };
-    });
+        if (grid[mineRow][mineCol].contents.type != 'mine') {
+            grid[mineRow][mineCol].contents = { type: 'mine' };
+            minesPlanted++;
+        }
+    }
     // After placing the mines, calculate neighbors for each cell
     makeRange(rows).forEach((row) => {
         makeRange(cols).forEach((col) => {

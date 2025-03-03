@@ -1,10 +1,10 @@
 import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router';
+import { createHashRouter, RouterProvider } from 'react-router';
 import { Layout } from './Layout';
 import { Main } from './pages/Main';
 import { Minesweeper } from './pages/Minesweeper';
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '/',
     element: <Layout />,
