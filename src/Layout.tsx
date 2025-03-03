@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 
@@ -17,14 +17,19 @@ export const Layout = () => {
         }
     }, [route, navigate]);
     const labelForCurrentRoute = labelForRoute(route.pathname);
+    const [collapsed, setCollapsed] = useState(true);
+    const toggleCollapsed = useCallback(() => {
+        setCollapsed(collapsed => !collapsed); 
+    }, []);
     const reportIssueUrl = `https://github.com/jurelmetal/jurelmetal.github.io/issues/new?labels=${labelForCurrentRoute}`;
     return (
         <div className='container'>
-            <Sidebar className="sidebar">
+            <Sidebar className="sidebar" collapsed={collapsed}>
                 <Menu>
-                    <MenuItem component={<Link to="/juanetoh" />}>Home</MenuItem>
-                    <MenuItem component={<Link to="/minesweeper" />}>Minesweeper</MenuItem>
-                    <MenuItem href={reportIssueUrl}>Report issue</MenuItem>
+                    <MenuItem icon={'☰'} onClick={toggleCollapsed}></MenuItem>
+                    <MenuItem icon={'🏠'} component={<Link to="/juanetoh" />}>Home</MenuItem>
+                    <MenuItem icon={'💣'} component={<Link to="/minesweeper" />}>Minesweeper</MenuItem>
+                    <MenuItem icon={'🐞'} href={reportIssueUrl}>Report issue</MenuItem>
                 </Menu>
             </Sidebar>
             <div className='routeContent'>            
