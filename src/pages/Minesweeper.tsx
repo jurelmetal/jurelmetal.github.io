@@ -49,7 +49,7 @@ const Cell: React.FC<CellProps> = ({row, col}) => {
 
 const GameGrid: React.FC = () => {
     const { rows, cols, mines, resetGame, winState } = useContext(MinesweeperContext);
-    const resetButtonLabel = winState == 'playing' ? '😃' : winState == 'win' ? '😎' : '😥';    
+    const resetButtonLabel = winState == 'playing' ? '😃' : winState == 'win' ? '😎' : '😥';
     return (
         <div className='minesweeper-container'>
             <p>Playing a {rows} by {cols} board with {mines} mines</p>

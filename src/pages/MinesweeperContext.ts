@@ -1,7 +1,6 @@
-import { createContext, useCallback, useState } from "react";
-import { copyValue } from "../utils/copyValue";
+import { createContext, useCallback, useEffect, useState } from "react";
+import { repeat } from "../utils/repeat";
 import { makeRange } from "../utils/makeRange";
-
 
 export type BaseCell = {
     type: string;
@@ -33,7 +32,7 @@ export type MinesweeperContextType = {
     rows: number;
     cols: number;
     mines: number;
-    flaggedCells: number;
+    closedCells: number;
     winState: WinState;
     cellState: CellInfo[][];
 };
@@ -56,18 +55,14 @@ const neighborPairs = (rows: number, cols: number, targetRow: number, targetCol:
 }
 
 const countNeighbors = (grid: CellInfo[][], row: number, col: number): number => {
-    let count = 0;
-    for (const [auxRow, auxCol] of neighborPairs(grid.length, grid[0].length, row, col)) {
-        if (grid[auxRow][auxCol].contents.type == 'mine') {
-            count++;
-        }
-    }
-    return count;
+    return neighborPairs(grid.length, grid[0].length, row, col)
+        .filter(([auxRow, auxCol]) => grid[auxRow][auxCol].contents.type == 'mine')
+        .length;
 };
 
 
 const generateInitialCellGrid = (rows: number, cols: number, mines: number): CellInfo[][] => {
-    let grid: CellInfo[][] = copyValue(copyValue({state: 'closed', contents: { type: 'free', neighbors: 0}}, cols), rows);
+    let grid: CellInfo[][] = repeat(repeat({state: 'closed', contents: { type: 'free', neighbors: 0}}, cols), rows);
     let minesPlanted = 0;
     while ( minesPlanted < mines) {
         // Place a mine in a random cell
@@ -96,25 +91,39 @@ const defaultMinesweeperContext: MinesweeperContextType = {
     rows: 10,
     cols: 10,
     mines: 10,
-    flaggedCells: 0,
+    closedCells: 100,
     cellState: [],
     winState: 'playing',    
 };
 
 export const MinesweeperContext = createContext(defaultMinesweeperContext);
 
-function recursiveOpen(cellState: CellInfo[][], row: number, col: number) {
+function recursiveOpen(cellState: CellInfo[][], row: number, col: number): number {
     const { contents, state } = cellState[row][col];
-    if (state != 'closed') return;
+    if (state != 'closed') return 0;
     cellState[row][col].state = 'open';
+    let openedCells = 1;
     if (contents.type == 'free' && contents.neighbors == 0) {
         for (const [auxRow, auxCol] of neighborPairs(cellState.length, cellState[0].length, row, col)) {
             if (cellState[auxRow][auxCol].state == 'closed') {
-                recursiveOpen(cellState, auxRow, auxCol);
+                openedCells += recursiveOpen(cellState, auxRow, auxCol);
             }
         }
     }
+    return openedCells;
 } 
+
+const flagRemainingCells = (cellState: CellInfo[][]): CellInfo[][] => {
+    const newCellState = structuredClone(cellState);
+    for (const row of newCellState) {
+        for (const cell of row) {
+            if (cell.state === 'closed') {
+                cell.state = 'flagged';
+            }
+        }
+    }
+    return newCellState;
+}
 
 export const createMinesweeperContext = (
     rows: number,
@@ -123,7 +132,7 @@ export const createMinesweeperContext = (
 ): MinesweeperContextType => {
 
     const [winState, setWinState] = useState<WinState>('playing');
-    const [flaggedCells, setFlaggedCells] = useState(0);
+    const [closedCells, setClosedCells] = useState(rows*cols);
 
     const [cellState, setCellState] = useState<CellInfo[][]>(
         generateInitialCellGrid(rows, cols, mines)
@@ -132,10 +141,11 @@ export const createMinesweeperContext = (
     const onCellClick = useCallback((row: number, col: number) => {
         if (winState != 'playing') return;
         const newCellState = structuredClone(cellState);
-        recursiveOpen(newCellState, row, col);
-        if (newCellState[row][col].contents.type == 'mine') {
+        const openedCells = recursiveOpen(newCellState, row, col);
+        if (cellState[row][col].contents.type == 'mine') {
             setWinState('lose');
         }
+        setClosedCells(cc => cc - openedCells);
         setCellState(newCellState);
     }, [cellState, winState]);
 
@@ -147,23 +157,26 @@ export const createMinesweeperContext = (
         if (state != 'open') {
             if (state == 'flagged') {
                 newCellState[row][col].state = 'closed';
-                setFlaggedCells(fc => fc - 1);
             } else {
                 newCellState[row][col].state = 'flagged';
-                setFlaggedCells(fc => fc + 1);
-                if (flaggedCells + 1 == mines) {
-                    setWinState('win');
-                }
             }
         }
         setCellState(newCellState);
-    }, [cellState, winState, flaggedCells]);
+    }, [closedCells, cellState, winState]);
 
     const resetGame = useCallback(() => {
         setCellState(generateInitialCellGrid(rows, cols, mines));
+        setClosedCells(rows*cols);
         setWinState('playing');
-        setFlaggedCells(0);
     }, [rows, cols, mines]);
+
+    useEffect(() => {
+        console.log('closed cells', closedCells);
+        if (closedCells == mines) {
+            setCellState(cs => flagRemainingCells(cs));
+            setWinState('win');
+        }
+    }, [mines, closedCells])
 
     return {
         rows,
@@ -172,7 +185,7 @@ export const createMinesweeperContext = (
         onCellClick,
         cellState,
         winState,
-        flaggedCells,
+        closedCells,
         onCellFlag,
         resetGame,
     };
