@@ -1,11 +1,29 @@
 import React from 'react';
-import './App.css';
+import { createBrowserRouter, RouterProvider } from 'react-router';
+import { Layout } from './Layout';
+import { Main } from './pages/Main';
+import { Minesweeper } from './pages/Minesweeper';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      {
+        path: 'juanetoh',
+        element: <Main />,
+      },
+      {
+        path: 'minesweeper',
+        element: <Minesweeper />,
+      }
+    ]
+  },
+]);
 
 const App: React.FC = () => {
   return (
-    <div className='container'>
-      <h1 className='mainTitle'>JUANETOH</h1>
-    </div>
+    <RouterProvider router={router} />
   );
 };
 
