@@ -1,4 +1,4 @@
-import { createContext, useCallback, useMemo, useState } from "react";
+import { createContext, useCallback, useState } from "react";
 import { copyValue } from "../utils/copyValue";
 import { makeRange } from "../utils/makeRange";
 
@@ -111,19 +111,6 @@ function recursiveOpen(cellState: CellInfo[][], row: number, col: number) {
         }
     }
 } 
-
-
-const flagCell = (cellState: CellInfo[][], row: number, col: number): [CellInfo[][], number] => {
-    // First, copy
-    const newCellState = structuredClone(cellState);
-    const { state } = newCellState[row][col];
-    if (state != 'open') {
-        newCellState[row][col].state = state == 'flagged' ? 'closed' : 'flagged';        
-        return [newCellState, cellState[row][col].state == 'flagged' ? 1 : -1];
-    }
-    return [newCellState, 0];
-   
-}
 
 export const createMinesweeperContext = (
     rows: number,

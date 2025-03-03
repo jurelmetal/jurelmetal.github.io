@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useContext, useRef } from "react";
+import React, { MouseEventHandler, useCallback, useContext } from "react";
 import "./Minesweeper.css";
 import { makeRange } from "../utils/makeRange";
 import { CellContents, CellState, MinesweeperContext, createMinesweeperContext } from "./MinesweeperContext";
@@ -16,9 +16,6 @@ const getCellContent = (state: CellState, contents: CellContents): string => {
         case 'closed': return ' ';
         case 'flagged': return '🚩';
         case 'open': return buttonContent;
-        default:
-            const _: never = state;
-            throw new Error('invalid state');
     }
 };
 
