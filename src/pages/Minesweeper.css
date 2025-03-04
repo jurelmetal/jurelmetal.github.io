@@ -45,3 +45,8 @@
     padding: 0.5rem;
     border-radius: 0.5rem;
 }
+
+.parameter-mini-input {
+    width: 40px;
+    margin-inline: 0.3rem;
+}

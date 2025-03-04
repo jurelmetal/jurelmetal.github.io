@@ -25,9 +25,14 @@ export type CellInfo = {
 
 export type WinState = 'playing' | 'win' | 'lose';
 
+const MAX_ROWS = 20;
+const MAX_COLS = 30;
+const MAX_MINES = 100;
+
 export type MinesweeperContextType = {
     onCellClick: (row: number, col: number) => void;
     onCellFlag: (row: number, col: number) => void;
+    setParameters: (rows: number, cols: number, mines: number) => void;
     resetGame: () => void;
     rows: number;
     cols: number;
@@ -88,6 +93,7 @@ const defaultMinesweeperContext: MinesweeperContextType = {
     onCellClick: (row, col) => console.log('click', row, col),
     onCellFlag: (row, col) => console.log('flag', row, col),
     resetGame: () => {},
+    setParameters: (_r, _c, _m) => {},
     rows: 10,
     cols: 10,
     mines: 10,
@@ -125,11 +131,11 @@ const flagRemainingCells = (cellState: CellInfo[][]): CellInfo[][] => {
     return newCellState;
 }
 
-export const createMinesweeperContext = (
-    rows: number,
-    cols: number,
-    mines: number,
-): MinesweeperContextType => {
+export const createMinesweeperContext = (): MinesweeperContextType => {
+
+    const [rows, setRows] = useState(10);
+    const [cols, setCols] = useState(10);
+    const [mines, setMines] = useState(10);
 
     const [winState, setWinState] = useState<WinState>('playing');
     const [closedCells, setClosedCells] = useState(rows*cols);
@@ -176,7 +182,19 @@ export const createMinesweeperContext = (
             setCellState(cs => flagRemainingCells(cs));
             setWinState('win');
         }
-    }, [mines, closedCells])
+    }, [mines, closedCells]);
+
+    const setParameters = useCallback((newRows: number, newCols: number, newMines: number) => {
+        if (newRows > 0 && newRows <= MAX_ROWS 
+            && newCols > 0 && newCols <= MAX_COLS 
+            && newMines > 0 && newMines <= MAX_MINES
+            && newMines < newRows*newCols) {
+            setCellState(generateInitialCellGrid(newRows, newCols, newMines));
+            setRows(newRows);
+            setCols(newCols);
+            setMines(newMines);
+        } 
+    }, [resetGame]);
 
     return {
         rows,
@@ -188,5 +206,6 @@ export const createMinesweeperContext = (
         closedCells,
         onCellFlag,
         resetGame,
+        setParameters
     };
 };

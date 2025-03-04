@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useContext } from "react";
+import React, { ChangeEventHandler, MouseEventHandler, useCallback, useContext } from "react";
 import "./Minesweeper.css";
 import { makeRange } from "../utils/makeRange";
 import { CellContents, CellState, MinesweeperContext, createMinesweeperContext } from "./MinesweeperContext";
@@ -47,12 +47,42 @@ const Cell: React.FC<CellProps> = ({row, col}) => {
     );
 };
 
+type MiniInputProps = {
+    value: number;
+    onChange: (newValue: number) => void;
+};
+
+const MiniInput: React.FC<MiniInputProps> = ({ value, onChange }) => {
+    const stableOnChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
+        onChange(parseInt(e.target.value));
+    }, [onChange]);
+    return (
+        <input className='parameter-mini-input' type='number' value={value} onChange={stableOnChange} />
+    );
+};
+
+type ChangeProp = 'rows' | 'cols' | 'mines';
+
 const GameGrid: React.FC = () => {
-    const { rows, cols, mines, resetGame, winState } = useContext(MinesweeperContext);
+    const { rows, cols, mines, resetGame, winState, setParameters } = useContext(MinesweeperContext);
     const resetButtonLabel = winState == 'playing' ? '😃' : winState == 'win' ? '😎' : '😥';
+
+    const onChangeHandler = useCallback((prop: ChangeProp, newValue: number) => {
+        const newRows = prop == 'rows' ? newValue : rows;
+        const newCols = prop == 'cols' ? newValue : cols;
+        const newMines = prop == 'mines' ? newValue : mines;
+        setParameters(newRows, newCols, newMines);
+    }, [rows, cols, mines, setParameters]);
+
     return (
         <div className='minesweeper-container'>
-            <p>Playing a {rows} by {cols} board with {mines} mines</p>
+            <p>Playing a 
+                <MiniInput value={rows} onChange={(newvalue: number) => onChangeHandler('rows', newvalue)} />
+                 by 
+                <MiniInput value={cols} onChange={(newvalue: number) => onChangeHandler('cols', newvalue)} />
+                board with
+                <MiniInput value={mines} onChange={(newvalue: number) => onChangeHandler('mines', newvalue)} />
+                mines</p>
             <div className='game-menu'>
                 <button className='game-reset-button' onClick={resetGame}>
                     {resetButtonLabel}
@@ -74,7 +104,7 @@ const GameGrid: React.FC = () => {
 };
 
 export const Minesweeper = () => {
-    const gameContext = createMinesweeperContext(10, 10, 10);
+    const gameContext = createMinesweeperContext();
     return (
         <MinesweeperContext.Provider value={gameContext}>
             <GameGrid />
