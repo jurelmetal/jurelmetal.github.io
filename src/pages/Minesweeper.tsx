@@ -2,6 +2,7 @@ import React, { ChangeEventHandler, MouseEventHandler, ReactNode, useCallback, u
 import "./Minesweeper.css";
 import { makeRange } from "../utils/makeRange";
 import { CellContents, CellState, MinesweeperContext, WinState, createMinesweeperViewModel } from "./MinesweeperViewModel";
+import { capitalize } from "../utils/capitalize";
 
 type CellProps = {
     row: number;
@@ -70,7 +71,11 @@ const MiniInput: React.FC<MiniInputProps> = ({ value, onChange }) => {
     );
 };
 
-type ChangeProp = 'rows' | 'cols' | 'mines';
+type GameParameter = 'rows' | 'cols' | 'mines';
+
+type GameConfiguration = {
+    [T in GameParameter]: number;
+};
 
 const winStateEmoji: Record<WinState, string> = {
     firstMove: '😀',
@@ -79,14 +84,21 @@ const winStateEmoji: Record<WinState, string> = {
     lose: '😥',
 };
 
+const standardParameters: Record<string, GameConfiguration> = {
+    beginner8: { rows: 8, cols: 8, mines: 10 },
+    beginner9: { rows: 9, cols: 9, mines: 10 },
+    intermediate: { rows: 16, cols: 16, mines: 40 },
+    expert: { rows: 16, cols: 30, mines: 99 },
+};
+
 const GameGrid: React.FC = () => {
     const { rows, cols, mines, resetGame, winState, setParameters } = useContext(MinesweeperContext);
     const resetButtonLabel = winStateEmoji[winState];
 
-    const onChangeHandler = useCallback((prop: ChangeProp, newValue: number) => {
-        const newRows = prop == 'rows' ? newValue : rows;
-        const newCols = prop == 'cols' ? newValue : cols;
-        const newMines = prop == 'mines' ? newValue : mines;
+    const onChangeHandler = useCallback((param: GameParameter, newValue: number) => {
+        const newRows = param == 'rows' ? newValue : rows;
+        const newCols = param == 'cols' ? newValue : cols;
+        const newMines = param == 'mines' ? newValue : mines;
         setParameters(newRows, newCols, newMines);
     }, [rows, cols, mines, setParameters]);
 
@@ -99,6 +111,13 @@ const GameGrid: React.FC = () => {
                 board with
                 <MiniInput value={mines} onChange={(newvalue: number) => onChangeHandler('mines', newvalue)} />
                 mines</p>
+            <div className='minesweeper-standard-buttons'>
+                {Object.entries(standardParameters).map(([key, { rows, cols, mines }]) => (
+                    <button onClick={() => setParameters(rows, cols, mines)}>
+                        {capitalize(key)}
+                    </button>
+                ))}
+            </div>
             <div className='game-menu'>
                 <button className='game-reset-button' onClick={resetGame}>
                     {resetButtonLabel}

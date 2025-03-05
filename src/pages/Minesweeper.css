@@ -67,3 +67,19 @@
     width: 40px;
     margin-inline: 0.3rem;
 }
+
+.minesweeper-standard-buttons button {
+    background-color: rgba(200, 200, 200, 0.9);
+    padding: 10px;
+    border-radius: 0.2rem;
+    border: 1px solid #eee;
+    margin-inline: 0.4rem;
+    vertical-align: text-bottom;
+    cursor: pointer;
+    font-weight: bolder;
+    font-family: monospace;
+}
+
+.minesweeper-standard-buttons button:hover {
+    background-color: rgba(200, 200, 200);
+}
