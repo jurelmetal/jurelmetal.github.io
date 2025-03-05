@@ -1,7 +1,7 @@
 import React, { ChangeEventHandler, MouseEventHandler, ReactNode, useCallback, useContext } from "react";
 import "./Minesweeper.css";
 import { makeRange } from "../utils/makeRange";
-import { CellContents, CellState, MinesweeperContext, createMinesweeperViewModel } from "./MinesweeperViewModel";
+import { CellContents, CellState, MinesweeperContext, WinState, createMinesweeperViewModel } from "./MinesweeperViewModel";
 
 type CellProps = {
     row: number;
@@ -72,9 +72,16 @@ const MiniInput: React.FC<MiniInputProps> = ({ value, onChange }) => {
 
 type ChangeProp = 'rows' | 'cols' | 'mines';
 
+const winStateEmoji: Record<WinState, string> = {
+    firstMove: '😀',
+    playing: '😀',
+    win: '😎',
+    lose: '😥',
+};
+
 const GameGrid: React.FC = () => {
     const { rows, cols, mines, resetGame, winState, setParameters } = useContext(MinesweeperContext);
-    const resetButtonLabel = winState == 'playing' ? '😃' : winState == 'win' ? '😎' : '😥';
+    const resetButtonLabel = winStateEmoji[winState];
 
     const onChangeHandler = useCallback((prop: ChangeProp, newValue: number) => {
         const newRows = prop == 'rows' ? newValue : rows;

@@ -23,7 +23,9 @@ export type CellInfo = {
     state: CellState;
 }
 
-export type WinState = 'playing' | 'win' | 'lose';
+export type WinState = 'firstMove' | 'playing' | 'win' | 'lose';
+
+const canMove = (winState: WinState): boolean => winState == 'firstMove' || winState == 'playing';
 
 const MAX_ROWS = 20;
 const MAX_COLS = 30;
@@ -67,27 +69,32 @@ const countNeighbors = (grid: CellInfo[][], row: number, col: number): number =>
 };
 
 
-const generateInitialCellGrid = (rows: number, cols: number, mines: number): CellInfo[][] => {
-    let grid: CellInfo[][] = repeat(repeat({state: 'closed', contents: { type: 'free', neighbors: 0}}, cols), rows);
+const getPlantedGrid = (grid: CellInfo[][], mines: number, initialMoveX: number, initialMoveY: number): CellInfo[][] => {
     let minesPlanted = 0;
+    const gridRows = grid.length;
+    const gridCols = grid[0].length;
     while ( minesPlanted < mines) {
         // Place a mine in a random cell
-        const mineRow = Math.floor(Math.random() * rows);
-        const mineCol = Math.floor(Math.random() * cols);
-        if (grid[mineRow][mineCol].contents.type != 'mine') {
-            grid[mineRow][mineCol].contents = { type: 'mine' };
-            minesPlanted++;
-        }
+        const mineRow = Math.floor(Math.random() * gridRows);
+        const mineCol = Math.floor(Math.random() * gridCols);
+        if (mineRow == initialMoveX && mineCol == initialMoveY) continue;
+        if (grid[mineRow][mineCol].contents.type == 'mine') continue;
+        grid[mineRow][mineCol].contents = { type: 'mine' };
+        minesPlanted++;
     }
     // After placing the mines, calculate neighbors for each cell
-    makeRange(rows).forEach((row) => {
-        makeRange(cols).forEach((col) => {
+    makeRange(gridRows).forEach((row) => {
+        makeRange(gridCols).forEach((col) => {
             if (grid[row][col].contents.type == 'free') {
                 grid[row][col].contents.neighbors = countNeighbors(grid, row, col);
             }
         });
     });
     return grid;
+};
+
+const generateEmptyCellGrid = (rows: number, cols: number): CellInfo[][] => {
+    return repeat(repeat({state: 'closed', contents: { type: 'free', neighbors: 0}}, cols), rows);
 };
 
 const defaultMinesweeperContext: MinesweeperViewModel = {
@@ -141,26 +148,32 @@ export const createMinesweeperViewModel = (): MinesweeperViewModel => {
 
     const [flagsSet, setFlagsSet] = useState(0);
 
-    const [winState, setWinState] = useState<WinState>('playing');
+    const [winState, setWinState] = useState<WinState>('firstMove');
     const [closedCells, setClosedCells] = useState(rows*cols);
 
     const [cellState, setCellState] = useState<CellInfo[][]>(
-        generateInitialCellGrid(rows, cols, mines)
+        generateEmptyCellGrid(rows, cols)
     );
 
     const onCellClick = useCallback((row: number, col: number) => {
-        if (winState != 'playing') return;
-        const newCellState = structuredClone(cellState);
+        if (!canMove(winState)) return;
+        let newCellState;
+        if (winState == 'firstMove') {
+            newCellState = getPlantedGrid(structuredClone(cellState), mines, row, col);        
+            setWinState('playing');
+        } else {
+            newCellState = structuredClone(cellState);
+        }
         const openedCells = recursiveOpen(newCellState, row, col);
         if (cellState[row][col].contents.type == 'mine') {
             setWinState('lose');
         }
         setClosedCells(cc => cc - openedCells);
         setCellState(newCellState);
-    }, [cellState, winState]);
+    }, [mines, cellState, winState]);
 
     const onCellFlag = useCallback((row: number, col: number) => {
-        if (winState != 'playing') return;
+        if (!canMove(winState)) return;
         // First, copy
         const newCellState = structuredClone(cellState);
         const { state } = newCellState[row][col];
@@ -177,19 +190,19 @@ export const createMinesweeperViewModel = (): MinesweeperViewModel => {
         setCellState(newCellState);
     }, [flagsSet, mines, closedCells, cellState, winState]);
 
-    const resetGameInternal = useCallback((newRows: number, newCols: number, newMines: number) => {
-        setCellState(generateInitialCellGrid(newRows, newCols, newMines));
+    const resetGameInternal = useCallback((newRows: number, newCols: number) => {
+        setCellState(generateEmptyCellGrid(newRows, newCols));
         setClosedCells(newRows*newCols);
-        setWinState('playing');
+        setWinState('firstMove');
         setFlagsSet(0);
     }, []);
 
     const resetGame = useCallback(() => {
-        resetGameInternal(rows, cols, mines);
-    }, [rows, cols, mines]);
+        resetGameInternal(rows, cols);
+    }, [rows, cols]);
 
     useEffect(() => {
-        if (winState == 'playing' && closedCells == mines) {
+        if (canMove(winState) && closedCells == mines) {
             setCellState(cs => flagRemainingCells(cs));
             setWinState('win');
         }
@@ -203,7 +216,7 @@ export const createMinesweeperViewModel = (): MinesweeperViewModel => {
             setRows(newRows);
             setCols(newCols);
             setMines(newMines);
-            resetGameInternal(newRows, newCols, newMines);
+            resetGameInternal(newRows, newCols);
         } 
     }, [resetGame]);
 
