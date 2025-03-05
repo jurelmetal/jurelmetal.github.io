@@ -1,7 +1,7 @@
 import React, { ChangeEventHandler, MouseEventHandler, ReactNode, useCallback, useContext } from "react";
 import "./Minesweeper.css";
 import { makeRange } from "../utils/makeRange";
-import { CellContents, CellState, MinesweeperContext, createMinesweeperContext } from "./MinesweeperContext";
+import { CellContents, CellState, MinesweeperContext, createMinesweeperViewModel } from "./MinesweeperContext";
 
 type CellProps = {
     row: number;
@@ -113,9 +113,9 @@ const GameGrid: React.FC = () => {
 };
 
 export const Minesweeper = () => {
-    const gameContext = createMinesweeperContext();
+    const viewModel = createMinesweeperViewModel();
     return (
-        <MinesweeperContext.Provider value={gameContext}>
+        <MinesweeperContext.Provider value={viewModel}>
             <GameGrid />
         </MinesweeperContext.Provider>
     );

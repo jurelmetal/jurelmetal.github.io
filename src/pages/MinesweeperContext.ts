@@ -29,7 +29,7 @@ const MAX_ROWS = 20;
 const MAX_COLS = 30;
 const MAX_MINES = 100;
 
-export type MinesweeperContextType = {
+export type MinesweeperViewModel = {
     onCellClick: (row: number, col: number) => void;
     onCellFlag: (row: number, col: number) => void;
     setParameters: (rows: number, cols: number, mines: number) => void;
@@ -38,6 +38,7 @@ export type MinesweeperContextType = {
     cols: number;
     mines: number;
     closedCells: number;
+    flagsSet: number;
     winState: WinState;
     cellState: CellInfo[][];
 };
@@ -89,7 +90,7 @@ const generateInitialCellGrid = (rows: number, cols: number, mines: number): Cel
     return grid;
 };
 
-const defaultMinesweeperContext: MinesweeperContextType = {
+const defaultMinesweeperContext: MinesweeperViewModel = {
     onCellClick: (row, col) => console.log('click', row, col),
     onCellFlag: (row, col) => console.log('flag', row, col),
     resetGame: () => {},
@@ -98,6 +99,7 @@ const defaultMinesweeperContext: MinesweeperContextType = {
     cols: 10,
     mines: 10,
     closedCells: 100,
+    flagsSet: 0,
     cellState: [],
     winState: 'playing',    
 };
@@ -131,11 +133,13 @@ const flagRemainingCells = (cellState: CellInfo[][]): CellInfo[][] => {
     return newCellState;
 }
 
-export const createMinesweeperContext = (): MinesweeperContextType => {
+export const createMinesweeperViewModel = (): MinesweeperViewModel => {
 
     const [rows, setRows] = useState(10);
     const [cols, setCols] = useState(10);
     const [mines, setMines] = useState(10);
+
+    const [flagsSet, setFlagsSet] = useState(0);
 
     const [winState, setWinState] = useState<WinState>('playing');
     const [closedCells, setClosedCells] = useState(rows*cols);
@@ -163,21 +167,28 @@ export const createMinesweeperContext = (): MinesweeperContextType => {
         if (state != 'open') {
             if (state == 'flagged') {
                 newCellState[row][col].state = 'closed';
+                setFlagsSet(fs => fs - 1);
             } else {
+                if (flagsSet >= mines) return;
                 newCellState[row][col].state = 'flagged';
+                setFlagsSet(fs => fs + 1);
             }
         }
         setCellState(newCellState);
-    }, [closedCells, cellState, winState]);
+    }, [flagsSet, mines, closedCells, cellState, winState]);
+
+    const resetGameInternal = useCallback((newRows: number, newCols: number, newMines: number) => {
+        setCellState(generateInitialCellGrid(newRows, newCols, newMines));
+        setClosedCells(newRows*newCols);
+        setWinState('playing');
+        setFlagsSet(0);
+    }, []);
 
     const resetGame = useCallback(() => {
-        setCellState(generateInitialCellGrid(rows, cols, mines));
-        setClosedCells(rows*cols);
-        setWinState('playing');
+        resetGameInternal(rows, cols, mines);
     }, [rows, cols, mines]);
 
     useEffect(() => {
-        console.log('closed cells', closedCells);
         if (winState == 'playing' && closedCells == mines) {
             setCellState(cs => flagRemainingCells(cs));
             setWinState('win');
@@ -189,10 +200,10 @@ export const createMinesweeperContext = (): MinesweeperContextType => {
             && newCols > 0 && newCols <= MAX_COLS 
             && newMines > 0 && newMines <= MAX_MINES
             && newMines < newRows*newCols) {
-            setCellState(generateInitialCellGrid(newRows, newCols, newMines));
             setRows(newRows);
             setCols(newCols);
             setMines(newMines);
+            resetGameInternal(newRows, newCols, newMines);
         } 
     }, [resetGame]);
 
@@ -204,6 +215,7 @@ export const createMinesweeperContext = (): MinesweeperContextType => {
         cellState,
         winState,
         closedCells,
+        flagsSet,
         onCellFlag,
         resetGame,
         setParameters
