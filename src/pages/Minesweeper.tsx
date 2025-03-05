@@ -3,6 +3,7 @@ import "./Minesweeper.css";
 import { makeRange } from "../utils/makeRange";
 import { CellContents, CellState, MinesweeperContext, WinState, createMinesweeperViewModel } from "./MinesweeperViewModel";
 import { capitalize } from "../utils/capitalize";
+import { toTimer } from "../utils/toTimer";
 
 type CellProps = {
     row: number;
@@ -92,7 +93,7 @@ const standardParameters: Record<string, GameConfiguration> = {
 };
 
 const GameGrid: React.FC = () => {
-    const { rows, cols, mines, resetGame, winState, setParameters } = useContext(MinesweeperContext);
+    const { rows, cols, mines, flagsSet, resetGame, elapsedSecs, winState, setParameters } = useContext(MinesweeperContext);
     const resetButtonLabel = winStateEmoji[winState];
 
     const onChangeHandler = useCallback((param: GameParameter, newValue: number) => {
@@ -119,9 +120,15 @@ const GameGrid: React.FC = () => {
                 ))}
             </div>
             <div className='game-menu'>
+                <div>
+                    <span>Flags: <pre>{(mines - flagsSet)}</pre></span>
+                </div>
                 <button className='game-reset-button' onClick={resetGame}>
                     {resetButtonLabel}
                 </button>
+                <div>
+                    <span>Timer: <pre>{toTimer(elapsedSecs)}</pre></span>
+                </div>
             </div>
             <div className='game-grid'>
                 <div className='game-grid-border'>

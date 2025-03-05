@@ -1,6 +1,7 @@
 import { createContext, useCallback, useEffect, useState } from "react";
 import { repeat } from "../utils/repeat";
 import { makeRange } from "../utils/makeRange";
+import { useStopwatch } from "../hooks/useStopwatch";
 
 export type BaseCell = {
     type: string;
@@ -43,6 +44,7 @@ export type MinesweeperViewModel = {
     flagsSet: number;
     winState: WinState;
     cellState: CellInfo[][];
+    elapsedSecs: number;
 };
 
 
@@ -108,7 +110,8 @@ const defaultMinesweeperContext: MinesweeperViewModel = {
     closedCells: 100,
     flagsSet: 0,
     cellState: [],
-    winState: 'playing',    
+    winState: 'firstMove',
+    elapsedSecs: 0,
 };
 
 export const MinesweeperContext = createContext(defaultMinesweeperContext);
@@ -144,16 +147,15 @@ export const createMinesweeperViewModel = (): MinesweeperViewModel => {
 
     const [rows, setRows] = useState(10);
     const [cols, setCols] = useState(10);
-    const [mines, setMines] = useState(10);
-
+    const [mines, setMines] = useState(10);    
     const [flagsSet, setFlagsSet] = useState(0);
-
     const [winState, setWinState] = useState<WinState>('firstMove');
     const [closedCells, setClosedCells] = useState(rows*cols);
-
     const [cellState, setCellState] = useState<CellInfo[][]>(
         generateEmptyCellGrid(rows, cols)
     );
+
+    const stopwatch = useStopwatch();
 
     const onCellClick = useCallback((row: number, col: number) => {
         if (!canMove(winState)) return;
@@ -161,16 +163,18 @@ export const createMinesweeperViewModel = (): MinesweeperViewModel => {
         if (winState == 'firstMove') {
             newCellState = getPlantedGrid(structuredClone(cellState), mines, row, col);        
             setWinState('playing');
+            stopwatch.start();
         } else {
             newCellState = structuredClone(cellState);
         }
         const openedCells = recursiveOpen(newCellState, row, col);
         if (cellState[row][col].contents.type == 'mine') {
+            stopwatch.stop();
             setWinState('lose');
         }
         setClosedCells(cc => cc - openedCells);
         setCellState(newCellState);
-    }, [mines, cellState, winState]);
+    }, [mines, cellState, winState, stopwatch]);
 
     const onCellFlag = useCallback((row: number, col: number) => {
         if (!canMove(winState)) return;
@@ -195,18 +199,21 @@ export const createMinesweeperViewModel = (): MinesweeperViewModel => {
         setClosedCells(newRows*newCols);
         setWinState('firstMove');
         setFlagsSet(0);
-    }, []);
+        stopwatch.stop();
+        stopwatch.reset();
+    }, [stopwatch]);
 
     const resetGame = useCallback(() => {
         resetGameInternal(rows, cols);
-    }, [rows, cols]);
+    }, [rows, cols, stopwatch]);
 
     useEffect(() => {
         if (canMove(winState) && closedCells == mines) {
             setCellState(cs => flagRemainingCells(cs));
+            stopwatch.stop();
             setWinState('win');
         }
-    }, [winState, mines, closedCells]);
+    }, [winState, mines, closedCells, stopwatch]);
 
     const setParameters = useCallback((newRows: number, newCols: number, newMines: number) => {
         if (newRows > 0 && newRows <= MAX_ROWS 
@@ -231,6 +238,7 @@ export const createMinesweeperViewModel = (): MinesweeperViewModel => {
         flagsSet,
         onCellFlag,
         resetGame,
-        setParameters
+        setParameters,
+        elapsedSecs: stopwatch.secs,
     };
 };
