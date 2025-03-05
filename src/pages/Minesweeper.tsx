@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler, MouseEventHandler, useCallback, useContext } from "react";
+import React, { ChangeEventHandler, MouseEventHandler, ReactNode, useCallback, useContext } from "react";
 import "./Minesweeper.css";
 import { makeRange } from "../utils/makeRange";
 import { CellContents, CellState, MinesweeperContext, createMinesweeperContext } from "./MinesweeperContext";
@@ -8,14 +8,24 @@ type CellProps = {
     col: number;
 }
 
-const getCellContent = (state: CellState, contents: CellContents): string => {
-    const buttonContent = contents.type == 'mine' 
-    ? '💣' 
-    : (contents.neighbors == 0 ? ' ' : `${contents.neighbors}`);
+const getCellContent = (state: CellState, contents: CellContents): ReactNode => {
     switch(state) {
-        case 'closed': return ' ';
-        case 'flagged': return '🚩';
-        case 'open': return buttonContent;
+        case 'closed': return <span>&nbsp;</span>;
+        case 'flagged': return <span>🚩</span>;
+        case 'open': {
+            switch(contents.type) {
+                case 'mine': return <span>💣</span>;
+                case 'free': {
+                    return (
+                        <span
+                            style={{ color: `var(--neighbors-${contents.neighbors})`}}
+                        >
+                            {contents.neighbors}
+                        </span>
+                    );
+                }
+            }
+        }
     }
 };
 
@@ -32,7 +42,6 @@ const Cell: React.FC<CellProps> = ({row, col}) => {
         onCellClick(row, col);
     }, [row, col, onCellClick]);
 
-    const cellContent = getCellContent(state, contents);
     return (
         <button
             className="cell"
@@ -42,7 +51,7 @@ const Cell: React.FC<CellProps> = ({row, col}) => {
             onContextMenu={rightClickHandler}
             onClick={clickHandler}
         >
-            {cellContent}
+            {getCellContent(state, contents)}
         </button>
     );
 };

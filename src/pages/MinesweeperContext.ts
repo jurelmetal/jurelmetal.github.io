@@ -178,11 +178,11 @@ export const createMinesweeperContext = (): MinesweeperContextType => {
 
     useEffect(() => {
         console.log('closed cells', closedCells);
-        if (closedCells == mines) {
+        if (winState == 'playing' && closedCells == mines) {
             setCellState(cs => flagRemainingCells(cs));
             setWinState('win');
         }
-    }, [mines, closedCells]);
+    }, [winState, mines, closedCells]);
 
     const setParameters = useCallback((newRows: number, newCols: number, newMines: number) => {
         if (newRows > 0 && newRows <= MAX_ROWS 
