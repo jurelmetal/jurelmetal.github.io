@@ -3,7 +3,6 @@ import { createHashRouter, RouteObject, RouterProvider } from 'react-router';
 import { Layout } from './Layout';
 import { Main } from './pages/Main/Main';
 import { Minesweeper } from './pages/Minesweeper/Minesweeper';
-import { Sudoku } from './pages/Sudoku/Sudoku';
 
 export type EnhancedRouteObject = RouteObject & {
   icon: string | ReactNode;
