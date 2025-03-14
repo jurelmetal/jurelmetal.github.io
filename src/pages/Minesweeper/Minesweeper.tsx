@@ -1,9 +1,9 @@
 import React, { ChangeEventHandler, MouseEventHandler, ReactNode, useCallback, useContext } from "react";
 import "./Minesweeper.css";
-import { makeRange } from "../utils/makeRange";
+import { makeRange } from "../../utils/makeRange";
 import { CellContents, CellState, MinesweeperContext, WinState, createMinesweeperViewModel } from "./MinesweeperViewModel";
-import { capitalize } from "../utils/capitalize";
-import { toTimer } from "../utils/toTimer";
+import { capitalize } from "../../utils/capitalize";
+import { toTimer } from "../../utils/toTimer";
 
 type CellProps = {
     row: number;

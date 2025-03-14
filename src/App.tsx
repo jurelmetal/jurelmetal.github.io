@@ -1,23 +1,35 @@
-import React from 'react';
-import { createHashRouter, RouterProvider } from 'react-router';
+import React, { ReactNode } from 'react';
+import { createHashRouter, RouteObject, RouterProvider } from 'react-router';
 import { Layout } from './Layout';
-import { Main } from './pages/Main';
-import { Minesweeper } from './pages/Minesweeper';
+import { Main } from './pages/Main/Main';
+import { Minesweeper } from './pages/Minesweeper/Minesweeper';
+import { Sudoku } from './pages/Sudoku/Sudoku';
+
+export type EnhancedRouteObject = RouteObject & {
+  icon: string | ReactNode;
+  displayLabel: string;
+}
+
+export const childRoutes: EnhancedRouteObject[] = [
+  {
+    path: 'juanetoh',
+    element: <Main />,
+    icon: '🏠',
+    displayLabel: 'Home',
+  },
+  {
+    path: 'minesweeper',
+    element: <Minesweeper />,
+    icon: '💣',
+    displayLabel: 'Minesweeper',
+  },
+];
 
 const router = createHashRouter([
   {
     path: '/',
     element: <Layout />,
-    children: [
-      {
-        path: 'juanetoh',
-        element: <Main />,
-      },
-      {
-        path: 'minesweeper',
-        element: <Minesweeper />,
-      }
-    ]
+    children: childRoutes,
   },
 ]);
 

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useEffect, useState } from "react";
-import { repeat } from "../utils/repeat";
-import { makeRange } from "../utils/makeRange";
-import { useStopwatch } from "../hooks/useStopwatch";
+import { repeat } from "../../utils/repeat";
+import { makeRange } from "../../utils/makeRange";
+import { useStopwatch } from "../../hooks/useStopwatch";
 
 export type BaseCell = {
     type: string;

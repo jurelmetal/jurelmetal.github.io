@@ -3,6 +3,7 @@ import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 
 import "./Layout.css";
+import { childRoutes } from "./App";
 
 const labelForRoute = (pathname: string): string => {
     return pathname.substring(1);
@@ -27,8 +28,9 @@ export const Layout = () => {
             <Sidebar className="sidebar" collapsed={collapsed}>
                 <Menu>
                     <MenuItem icon={'☰'} onClick={toggleCollapsed}></MenuItem>
-                    <MenuItem icon={'🏠'} component={<Link to="/juanetoh" />}>Home</MenuItem>
-                    <MenuItem icon={'💣'} component={<Link to="/minesweeper" />}>Minesweeper</MenuItem>
+                    {childRoutes.map((route) => (
+                        <MenuItem icon={route.icon} component={<Link to={`/${route.path}`} />}>{route.displayLabel}</MenuItem>
+                    ))}
                     <MenuItem icon={'🐞'} href={reportIssueUrl}>Report issue</MenuItem>
                 </Menu>
             </Sidebar>
